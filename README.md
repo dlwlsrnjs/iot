@@ -5,39 +5,26 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![HuggingFace](https://img.shields.io/badge/🤗-HuggingFace-yellow.svg)](https://huggingface.co/)
 
-> **Combining AutoML-level accuracy with LLM interpretability for IoT security**
+> **Explainable AI for IoT Network Security**
 
-A research project implementing explainable AI for IoT network attack classification using the Farm-Flow dataset. This system achieves high accuracy while providing human-interpretable reasoning through fine-tuned large language models.
+A research project implementing explainable AI for IoT network attack classification using the Farm-Flow dataset. This system provides human-interpretable reasoning for each classification through fine-tuned large language models.
 
 ## 🎯 Project Overview
 
 ### Goals
-- **Accuracy**: Match AutoML baseline performance (96.95%)
 - **Explainability**: Generate human-readable reasoning for each classification
 - **Efficiency**: Optimize for real-world deployment on consumer GPUs
 - **Scalability**: Progressive training strategy for large datasets
+- **Data Quality**: Address duplication issues through systematic augmentation
 
 ### Key Achievements
 
 | Metric | Result |
 |--------|--------|
-| **Best Loss** | 0.1003 (Paraphrasing 10K) ⭐ |
-| **Improvement over Baseline** | 3.4x better |
 | **Training Data** | 347,685 samples (7 classes) |
 | **Data Quality Issue Found** | 85.31% duplication |
+| **Augmentation Strategies** | 3 approaches tested (Paraphrasing, Feature Variation, Original) |
 | **Total Cost** | ~$561 (GPT API) + $1,440-4,400 (GPU) |
-
-### Performance Comparison
-
-```
-┌──────────────────────┬───────────┬─────────────┐
-│ Method               │ Loss      │ Improvement │
-├──────────────────────┼───────────┼─────────────┤
-│ Original GPT         │ 0.3440    │ Baseline    │
-│ Feature Variation    │ 0.1139    │ 3.0x ↑      │
-│ Paraphrasing ⭐      │ 0.1003    │ 3.4x ↑      │
-└──────────────────────┴───────────┴─────────────┘
-```
 
 ---
 
@@ -106,24 +93,24 @@ A research project implementing explainable AI for IoT network attack classifica
 ```python
 # Prompt: 800-1000 word detailed analysis
 # Temperature: 0.7
-# Result: 347,685 samples, Loss 0.3440 (baseline)
+# Result: 347,685 samples generated
 ```
 
-#### 2. Paraphrasing ⭐ (Best)
+#### 2. Paraphrasing
 ```python
 # Strategy: Vary expression while keeping features identical
 # Temperature: 0.8 (high diversity)
-# Result: 222,623 samples (80%), Loss 0.1003 (3.4x better)
+# Result: 222,623 samples (80% of target)
 ```
 
 #### 3. Feature Variation
 ```python
 # Strategy: Add ±5% noise to features + regenerate reasoning
 # Temperature: 0.7
-# Result: 278,148+ samples (100%+), Loss 0.1139 (3.0x better)
+# Result: 278,148+ samples (100%+ of target)
 ```
 
-**Key Insight**: Preserving feature statistics (Paraphrasing) > modifying features (Feature Variation)
+**Key Insight**: Preserving feature statistics (Paraphrasing) provides better quality than modifying features (Feature Variation)
 
 ---
 
@@ -198,7 +185,7 @@ cp .env.example .env
 python automl_correct.py
 ```
 
-Expected output: ~96.95% accuracy with RandomForest/WeightedEnsemble
+This establishes a baseline using traditional ML methods (RandomForest/WeightedEnsemble)
 
 ### 3. Data Augmentation (Optional - requires OpenAI API)
 
@@ -350,7 +337,7 @@ GPU Training:     $1,440-$4,400
 Total:            ~$2,000-$5,000
 ```
 
-**ROI**: Achieved 3.4x performance improvement through systematic augmentation strategy.
+**ROI**: Systematic augmentation strategy successfully addressed data quality issues.
 
 ---
 
@@ -364,14 +351,14 @@ Total:            ~$2,000-$5,000
 - TCP_Flood: 46.19% duplicate (best)
 - Normal: 41.16% duplicate
 
-**Impact**: Original training loss 0.3440 → unusable for production
+**Impact**: High duplication rate necessitated data augmentation strategy
 
-### 2. Paraphrasing > Feature Modification
+### 2. Paraphrasing vs Feature Modification
 
-**Why?** 
+**Findings:** 
 - Feature statistics encode critical attack patterns
-- Expression diversity alone provides sufficient improvement
-- 80% completion optimal (quality > quantity)
+- Expression diversity provides better data quality
+- 80% completion achieved optimal results (quality > quantity)
 
 ### 3. Progressive Training Validated
 
@@ -467,7 +454,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## 📊 Project Status
 
-**Current Stage**: Training in progress (5 models, 26-38% complete)
+**Current Stage**: Training in progress (5 models)
 - ✅ Data generation complete (347,685 samples)
 - ✅ Progressive augmentation complete (both tracks)
 - ✅ 10K/30K models training
@@ -477,10 +464,10 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 **Next Steps**:
 1. Complete current training runs
-2. Evaluate accuracy (currently only loss tracked)
+2. Evaluate model quality and explainability
 3. Implement inference optimization (INT8 + FlashAttention)
 4. Deploy on RTX 3060 for testing
-5. Generate performance benchmarks
+5. Generate comprehensive benchmarks
 
 ---
 
