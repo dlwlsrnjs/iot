@@ -1,18 +1,18 @@
 ================================================================================
-데이터 증강 프롬프트 가이드
+Data Augmentation Prompt Guide
 ================================================================================
-프로젝트: Farm-Flow IoT 공격 분류 LLM 학습
-날짜: 2025-12-15
-목적: GPT-4o-mini를 활용한 3가지 데이터 증강 전략 상세 문서화
+Project: Farm-Flow IoT Attack Classification LLM Training
+Date: 2025-12-15
+Purpose: Detailed documentation of 3 data augmentation strategies using GPT-4o-mini
 
 ================================================================================
-1. 원본 GPT 생성 프롬프트 (create_gpt_training_data.py)
+1. Original GPT Generation Prompt (create_gpt_training_data.py)
 ================================================================================
 
-[목적]
-- 347,685개 원본 샘플에 대해 상세한 reasoning 생성
-- 29개 feature 값을 기반으로 800-1000 단어 분석 제공
-- 클래스당 균등 샘플링 (각 57,611개 또는 2,019개)
+[Purpose]
+- Generate detailed reasoning for 347,685 original samples
+- Provide 800-1000 word analysis based on 29 feature values
+- Balanced sampling per class (57,611 or 2,019 each)
 
 [System Prompt]
 ---------------------------------------------------------------------------------
@@ -99,33 +99,33 @@ and follow the exact format above.
 - Max tokens: 1024
 - Top_p: 0.95
 
-[처리 방식]
-- 클래스별 순차 처리: TCP_Flood → Port_Scanning → ICMP_Flood → Arp_Spoofing 
+[Processing Method]
+- Sequential class processing: TCP_Flood → Port_Scanning → ICMP_Flood → Arp_Spoofing 
   → MQTT_Flood → HTTP_Flood → Normal
-- 각 클래스에서 랜덤 샘플링
-- JSONL 형식 저장 (즉시 학습 가능)
+- Random sampling from each class
+- Save in JSONL format (ready for training)
 
-[결과]
-- 총 347,685개 샘플 생성
-- 소요 시간: ~6.5시간 (40 workers 병렬)
-- 비용: $150
-- 문제점: 85.31% 중복으로 인한 다양성 부족
+[Results]
+- Total 347,685 samples generated
+- Time: ~6.5 hours (40 workers parallel)
+- Cost: $150
+- Issue: 85.31% duplication causing lack of diversity
 - Training Loss: 0.3440 (WORST)
 
 
 ================================================================================
-2. Paraphrasing 증강 (paraphrase_duplicates.py)
+2. Paraphrasing Augmentation (paraphrase_duplicates.py)
 ================================================================================
 
-[목적]
-- 85.31% 중복된 원본 reasoning의 표현만 다양화
-- Feature 값은 그대로, reasoning 문장만 paraphrasing
-- 내용/의미는 동일하게 유지하면서 표현 변경
+[Purpose]
+- Diversify expressions of 85.31% duplicated original reasoning
+- Keep feature values intact, only paraphrase reasoning sentences
+- Maintain content/meaning while varying expression
 
-[전략]
-1. Reasoning 기반 중복 탐지 (MD5 해시)
-2. 각 중복 그룹에서 첫 번째는 원본 유지
-3. 나머지는 GPT로 paraphrasing
+[Strategy]
+1. Detect duplicates based on reasoning (MD5 hash)
+2. Keep first sample in each duplicate group as original
+3. Paraphrase the rest using GPT
 
 [System Prompt]
 ---------------------------------------------------------------------------------
@@ -151,17 +151,17 @@ Paraphrased version (keep same length ~{original_length} chars, keep
 CLASSIFICATION line exactly as is):
 ---------------------------------------------------------------------------------
 
-[API 설정]
+[API Settings]
 - Model: gpt-4o-mini
-- Temperature: 0.8 (높은 다양성 확보)
+- Temperature: 0.8 (high diversity)
 - Max tokens: 2048
 
-[처리 방식]
-- 40 Workers 병렬 처리
-- 100개마다 자동 저장 (train_data_paraphrased.jsonl)
-- 최대 5회 재시도 (API 오류 대응)
+[Processing Method]
+- 40 Workers parallel processing
+- Auto-save every 100 samples (train_data_paraphrased.jsonl)
+- Up to 5 retries (API error handling)
 
-[중복 탐지 로직]
+[Duplicate Detection Logic]
 ```python
 # CLASSIFICATION 제외하고 reasoning만 해싱
 reasoning_only = re.sub(r'CLASSIFICATION:.*', '', assistant_content, 
@@ -169,27 +169,27 @@ reasoning_only = re.sub(r'CLASSIFICATION:.*', '', assistant_content,
 reasoning_hash = hashlib.md5(reasoning_only.encode()).hexdigest()
 ```
 
-[결과]
-- 완성도: 80.0% (222,623 / 278,148)
+[Results]
+- Completion: 80.0% (222,623 / 278,148)
 - 10K Loss: 0.1003 ⭐ BEST PERFORMANCE
 - 30K Loss: 0.1069
-- 비용: ~$200
-- 개선: Original 대비 3.4배 성능 향상
+- Cost: ~$200
+- Improvement: 3.4x better than Original
 
 
 ================================================================================
-3. Feature Variation 증강 (paraphrase_with_feature_variation.py)
+3. Feature Variation Augmentation (paraphrase_with_feature_variation.py)
 ================================================================================
 
-[목적]
-- Feature 값 자체를 변형 (±1-5% 노이즈)
-- 변형된 feature에 맞게 reasoning 재생성
-- 더 근본적인 데이터 다양성 확보
+[Purpose]
+- Modify feature values themselves (±1-5% noise)
+- Regenerate reasoning based on modified features
+- Achieve more fundamental data diversity
 
-[전략]
-1. Feature 기반 중복 탐지 (User content 해시)
-2. 각 중복 그룹에서 첫 번째는 원본 유지
-3. 나머지는 Feature 변형 + Reasoning 재생성
+[Strategy]
+1. Detect duplicates based on features (User content hash)
+2. Keep first sample in each duplicate group as original
+3. Feature modification + Reasoning regeneration for the rest
 
 [Feature 변형 로직]
 ---------------------------------------------------------------------------------
@@ -247,48 +247,48 @@ user_content = sample['messages'][0]['content']
 feature_hash = hashlib.md5(user_content.encode()).hexdigest()
 ```
 
-[결과]
-- 완성도: 100%+ (278,148+)
-- 10K Loss: 0.1139 (Paraphrasing보다 13.6% 높음)
+[Results]
+- Completion: 100%+ (278,148+)
+- 10K Loss: 0.1139 (13.6% higher than Paraphrasing)
 - 30K Loss: 0.1569
-- 비용: ~$211
-- 특징: Feature도 변형되지만 성능은 Paraphrasing보다 낮음
+- Cost: ~$211
+- Note: Features modified but performance lower than Paraphrasing
 
 
 ================================================================================
-4. 증강 전략 비교
+4. Augmentation Strategy Comparison
 ================================================================================
 
 ┌──────────────────┬─────────────┬──────────┬─────────────────────────────┐
-│ 방법             │ 완성도      │ Loss     │ 특징                        │
+│ Method           │ Completion  │ Loss     │ Features                    │
 ├──────────────────┼─────────────┼──────────┼─────────────────────────────┤
-│ Original GPT     │ 100%        │ 0.3440   │ 85% 중복, 다양성 부족       │
+│ Original GPT     │ 100%        │ 0.3440   │ 85% dup, low diversity      │
 ├──────────────────┼─────────────┼──────────┼─────────────────────────────┤
-│ Paraphrasing ⭐  │ 80%         │ 0.1003   │ 표현만 변경, 최고 성능      │
+│ Paraphrasing ⭐  │ 80%         │ 0.1003   │ Expression only, best       │
 ├──────────────────┼─────────────┼──────────┼─────────────────────────────┤
-│ Feature Varied   │ 100%+       │ 0.1139   │ Feature+Reasoning 변형      │
+│ Feature Varied   │ 100%+       │ 0.1139   │ Feature+Reasoning modified  │
 └──────────────────┴─────────────┴──────────┴─────────────────────────────┘
 
-[핵심 인사이트]
-1. 원본 데이터 85.31% 중복 → 증강 필요성 입증
-2. Paraphrasing이 Feature Variation보다 효과적
-   - 이유: Feature 값의 통계적 패턴 보존이 중요
-3. 80% 완성도에서 최고 성능 달성
-   - 과도한 증강보다 품질 높은 일부 증강이 효과적
+[Key Insights]
+1. 85.31% duplication in original data → proves need for augmentation
+2. Paraphrasing more effective than Feature Variation
+   - Reason: Preserving statistical patterns in features is important
+3. Best performance at 80% completion
+   - Quality over quantity: focused augmentation beats excessive augmentation
 
 
 ================================================================================
 5. Progressive Training Strategy
 ================================================================================
 
-[단계별 학습 전략]
-- 10K:  초기 개념 학습, 빠른 실험
-- 30K:  패턴 강화, 중간 평가
-- 70K:  일반화 능력 향상
-- 150K: 대규모 학습
-- ALL:  전체 데이터 (278,148개)
+[Stage-wise Learning Strategy]
+- 10K:  Initial concept learning, rapid experiments
+- 30K:  Pattern reinforcement, mid-stage evaluation
+- 70K:  Generalization capability improvement
+- 150K: Large-scale learning
+- ALL:  Full dataset (278,148 samples)
 
-[각 단계별 증강 현황]
+[Augmentation Status by Stage]
 
 Paraphrasing Track:
 ┌─────────┬────────────┬──────────┬──────────┐
@@ -314,62 +314,62 @@ Feature Variation Track:
 
 
 ================================================================================
-6. 비용 및 시간 분석
+6. Cost and Time Analysis
 ================================================================================
 
-[GPT API 비용]
-- Original Generation:     $150 (347,685 samples, 40 workers, 6.5시간)
+[GPT API Cost]
+- Original Generation:     $150 (347,685 samples, 40 workers, 6.5 hours)
 - Paraphrasing:            $200 (222,623 samples)
 - Feature Variation:       $211 (278,148+ samples)
 - Total:                   $561
 
-[GPU 학습 비용 (H100 80GB)]
-- 시간당 비용: $2-3/hour
-- 예상 총 학습 시간: 720-2,200시간 (전체 모델)
-- 예상 GPU 비용: $1,440-$4,400
+[GPU Training Cost (H100 80GB)]
+- Cost per hour: $2-3/hour
+- Estimated total training time: 720-2,200 hours (all models)
+- Estimated GPU cost: $1,440-$4,400
 
-[총 투자]
-- 데이터 생성: $561
-- GPU 학습 (예상): $1,440-$4,400
-- 합계: ~$2,000-$5,000
+[Total Investment]
+- Data generation: $561
+- GPU training (estimated): $1,440-$4,400
+- Total: ~$2,000-$5,000
 
 
 ================================================================================
-7. 프롬프트 설계 원칙
+7. Prompt Design Principles
 ================================================================================
 
-[1] 구체성 (Specificity)
+[1] Specificity
 - ❌ "Analyze the traffic"
 - ✅ "Reference EXACT feature values: resp_pkts = 2.145678"
 
-[2] 길이 제약 (Length Control)
+[2] Length Control
 - ❌ "Provide analysis"
 - ✅ "Write 800-1000 words, approximately {original_length} characters"
 
-[3] 형식 강제 (Format Enforcement)
+[3] Format Enforcement
 - ❌ "Explain the features"
 - ✅ "EXACT FORMAT: - **feature = value**: [explanation]"
 
-[4] 예시 제공 (Example-driven)
+[4] Example-driven
 - ❌ "Write technical analysis"
 - ✅ "COMPLETE EXAMPLE: - **resp_pkts = 2.145678**: This high positive value..."
 
-[5] 반복 강조 (Repetition)
+[5] Repetition
 - "YOU MUST reference SPECIFIC FEATURE VALUES"
 - "Keep the length approximately the same"
 - "REMEMBER: Write 800-1000 words"
 
-[6] 온도 조절 (Temperature Tuning)
+[6] Temperature Tuning
 - Original Generation: 0.7 (balanced creativity)
 - Paraphrasing: 0.8 (high diversity)
 - Feature Variation: 0.7 (controlled generation)
 
 
 ================================================================================
-8. 실험 결과 요약
+8. Experimental Results Summary
 ================================================================================
 
-[성능 비교 - Training Loss (10K 기준)]
+[Performance Comparison - Training Loss (10K baseline)]
 ┌──────────────────────┬───────────┬─────────────┐
 │ Method               │ Loss      │ Improvement │
 ├──────────────────────┼───────────┼─────────────┤
@@ -378,23 +378,23 @@ Feature Variation Track:
 │ Paraphrasing ⭐      │ 0.1003    │ 3.4x better │
 └──────────────────────┴───────────┴─────────────┘
 
-[핵심 발견]
-1. **원본 데이터 품질 문제 확인**
-   - 85.31% 중복 (296,614 / 347,685)
-   - HTTP_Flood: 97.23% 중복 (최악)
-   - TCP_Flood: 46.19% 중복 (최선)
+[Key Findings]
+1. **Original Data Quality Issues Confirmed**
+   - 85.31% duplication (296,614 / 347,685)
+   - HTTP_Flood: 97.23% duplicate (worst)
+   - TCP_Flood: 46.19% duplicate (best)
 
-2. **Paraphrasing이 최적**
-   - Feature 통계 보존이 중요
-   - 표현 다양성만으로도 충분한 개선
+2. **Paraphrasing is Optimal**
+   - Preserving feature statistics is important
+   - Expression diversity alone provides sufficient improvement
 
-3. **80% 증강으로 최고 성능**
-   - 과도한 증강 불필요
-   - 품질 > 양
+3. **Best Performance at 80% Augmentation**
+   - Excessive augmentation unnecessary
+   - Quality > Quantity
 
-4. **Progressive 전략 유효**
-   - 10K → 30K 단계적 학습
-   - 빠른 실험과 평가 가능
+4. **Progressive Strategy Validated**
+   - 10K → 30K staged learning
+   - Enables rapid experimentation and evaluation
 
 
 ================================================================================
@@ -412,46 +412,46 @@ Step 2: 길이 조정
 - 800-1000 words → 데이터셋 복잡도에 맞게 조정
 - max_tokens: 1024-2048 범위에서 실험
 
-Step 3: Temperature 실험
-- 창의적 설명: 0.7-0.9
-- 정확한 분류: 0.3-0.5
+Step 3: Experiment with Temperature
+- Creative explanation: 0.7-0.9
+- Accurate classification: 0.3-0.5
 - Paraphrasing: 0.8-1.0
 
-Step 4: 병렬 처리 규모
-- API rate limit 확인
-- 40 workers → 비용과 속도 균형
+Step 4: Parallel Processing Scale
+- Check API rate limits
+- 40 workers → balance cost and speed
 
-Step 5: 증강 비율 결정
-- 중복 분석 먼저 수행
-- 80-100% 범위에서 실험
-- Loss curve 모니터링
+Step 5: Determine Augmentation Ratio
+- Perform duplication analysis first
+- Experiment in 80-100% range
+- Monitor loss curve
 
 
 ================================================================================
-10. 참고 파일
+10. Reference Files
 ================================================================================
 
-코드 파일:
-- create_gpt_training_data.py           : 원본 GPT 생성
-- paraphrase_duplicates.py              : Paraphrasing 증강
-- paraphrase_with_feature_variation.py  : Feature Variation 증강
+Code Files:
+- create_gpt_training_data.py           : Original GPT generation
+- paraphrase_duplicates.py              : Paraphrasing augmentation
+- paraphrase_with_feature_variation.py  : Feature Variation augmentation
 
-데이터 파일:
-- train_data_original_size.jsonl        : 원본 GPT 생성 결과
-- train_data_paraphrased.jsonl          : Paraphrasing 결과
-- train_data_feature_varied.jsonl       : Feature Variation 결과
+Data Files:
+- train_data_original_size.jsonl        : Original GPT generation results
+- train_data_paraphrased.jsonl          : Paraphrasing results
+- train_data_feature_varied.jsonl       : Feature Variation results
 
-분석 스크립트:
-- check_data_leakage.py                 : 중복 분석
-- compare_raw_samples.py                : 샘플 비교
-- analyze_failed_samples.py             : 실패 샘플 분석
+Analysis Scripts:
+- check_data_leakage.py                 : Duplication analysis
+- compare_raw_samples.py                : Sample comparison
+- analyze_failed_samples.py             : Failed sample analysis
 
-학습 스크립트:
+Training Scripts:
 - train_paraphrased_10K.py
 - train_paraphrased_30K.py
 - train_feature_varied_10K.py
 - train_feature_varied_30K.py
 
 ================================================================================
-문서 끝
+End of Document
 ================================================================================
