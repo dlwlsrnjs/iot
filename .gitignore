@@ -1,0 +1,76 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Ignore virtual environments
+iot_env/
+rag_env/
+venv/
+env/
+ENV/
+
+# Ignore large data files
+*.jsonl
+*.json
+!class_patterns_for_llm.json
+!llm_prompts_for_classification.json
+!comprehensive_rag_large_model_results.json
+!fixed_guide_test_results.json
+!sample_guide_test_results.json
+all_data*.json
+
+# Ignore model checkpoints
+qwen_iot_*/
+checkpoint-*/
+*.safetensors
+*.bin
+
+# Ignore datasets
+Datasets/
+*.csv
+*.zip
+*.pdf
+
+# Ignore logs
+*.log
+
+# Ignore captures
+Captures/
+
+# Ignore database
+chroma_db/
+
+# Ignore pickle files
+*.pkl
+
+# Ignore temp files
+*_temp.*
+*.tmp
+
+# Ignore large documentation folders
+rag_documentation/
+rag_documentation_detailed/
+rag_classification_guides/
+rag_fewshot_examples/
+rag_llm_analyzed_examples/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Keep important documentation
+!README.md
+!RESEARCH_METHODOLOGY.txt
+!DATA_AUGMENTATION_PROMPTS.txt
+!*.md
+.env
