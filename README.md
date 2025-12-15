@@ -17,15 +17,6 @@ A research project implementing explainable AI for IoT network attack classifica
 - **Scalability**: Progressive training strategy for large datasets
 - **Data Quality**: Address duplication issues through systematic augmentation
 
-### Key Achievements
-
-| Metric | Result |
-|--------|--------|
-| **Training Data** | 347,685 samples (7 classes) |
-| **Data Quality Issue Found** | 85.31% duplication |
-| **Augmentation Strategies** | 3 approaches tested (Paraphrasing, Feature Variation, Original) |
-| **Total Cost** | ~$561 (GPT API) + $1,440-4,400 (GPU) |
-
 ---
 
 ## 📊 Dataset Information
