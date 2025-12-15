@@ -181,7 +181,7 @@ iot/
 
 ```bash
 # Clone repository
-git clone https://github.com/dlwlsrnjs/iot.git
+git clone https://github.com/[AUTHOR]/iot.git
 cd iot
 
 # Install dependencies
@@ -430,9 +430,9 @@ If you use this work in your research, please cite:
 ```bibtex
 @misc{iot_llm_classification_2025,
   title={Explainable IoT Network Attack Classification with Fine-tuned Large Language Models},
-  author={Your Name},
+  author={Anonymous},
   year={2025},
-  howpublished={\url{https://github.com/dlwlsrnjs/iot}}
+  howpublished={\url{https://github.com/[AUTHOR]/iot}}
 }
 ```
 
@@ -444,7 +444,7 @@ If you use this work in your research, please cite:
 
 This is a research project. For questions or collaboration:
 - Open an issue on GitHub
-- Contact: [Your contact info]
+- Contact information will be provided upon paper acceptance
 
 ---
 
